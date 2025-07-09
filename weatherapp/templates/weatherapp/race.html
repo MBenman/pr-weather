@@ -1,0 +1,29 @@
+!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ race.name }}</title>
+  </head>
+  <body>
+    <p>{{ race.name }}</p>
+    <p>{{ race.length }}</p>
+    <p>{{ race.location }}</p>
+    <p>{{ race.date }}</p>
+    <div>
+      <h2>Weather Forecast</h2>
+      {{ forecast_graph }}
+      {% for weather in weather_forecast %}
+          {{ weather.temp }}
+          {{ weather.datetime }}
+      {% endfor %}
+    </div>
+
+    {% for weather in historic_weather %}
+    <p>Temps</p>
+    <p>{{ weather.temp }}</p>
+     <p>Time: {{ weather.datetime }}</p>
+    {% empty %}
+    <p>No weather data available for this race.</p>
+    {% endfor %}
+  </body>
+</html>
