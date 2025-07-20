@@ -79,6 +79,8 @@ def race_weather(request, slug):
         
         weather_forecast = forecast_objects
 
+
+#Can be removed
     print(f"All location weather: {location_weather_all.count()}")
     if location_weather_all:
         first = timezone.localtime(location_weather_all.first().datetime)
@@ -92,22 +94,87 @@ def race_weather(request, slug):
         last = timezone.localtime(historic_weather.last().datetime)
         print(f"First record: {first}")
         print(f"Last record: {last}")
+#End can be removed
 
-
-    wf_df = pd.DataFrame(
-        list(
-            weather_forecast
+    # Convert to DataFrame
+    if hasattr(weather_forecast, 'values'):
+        # If it's a QuerySet
+        wf_data = list(weather_forecast.values('datetime', 'temp', 'humidity', 'wind_speed', 'rain', 'precip_prob'))
+    else:
+        # If it's a list of Weather objects
+        wf_data = []
+        for weather in weather_forecast:
+            wf_data.append({
+                'datetime': weather.datetime,
+                'temp': weather.temp,
+                'humidity': weather.humidity,
+                'wind_speed': weather.wind_speed,
+                'rain': weather.rain,
+                'precip_prob': weather.precip_prob,
+            })
+    
+    wf_df = pd.DataFrame(wf_data)
+    
+    # Create Plotly graph if we have data
+    forecast_graph = None
+    if not wf_df.empty:
+        # Convert datetime to local timezone for display
+        wf_df['datetime_local'] = wf_df['datetime'].apply(lambda x: timezone.localtime(x))
+        
+        # Create the plot
+        fig = go.Figure()
+        
+        # Add temperature line
+        fig.add_trace(go.Scatter(
+            x=wf_df['datetime_local'],
+            y=wf_df['temp'],
+            mode='lines+markers',
+            name='Temperature (°F)',
+            line=dict(color='red', width=2)
+        ))
+        
+        # Add humidity on secondary y-axis
+        fig.add_trace(go.Scatter(
+            x=wf_df['datetime_local'],
+            y=wf_df['humidity'],
+            mode='lines+markers',
+            name='Humidity (%)',
+            yaxis='y2',
+            line=dict(color='blue', width=2)
+        ))
+        
+        # Update layout
+        fig.update_layout(
+            title=f'Weather Forecast for {race.name}',
+            xaxis_title='Time',
+            yaxis=dict(
+                title='Temperature (°F)',
+                title_font=dict(color='red'),
+                tickfont=dict(color='red')
+            ),
+            yaxis2=dict(
+                title='Humidity (%)',
+                title_font=dict(color='blue'),
+                tickfont=dict(color='blue'),
+                anchor='x',
+                overlaying='y',
+                side='right'
+            ),
+            hovermode='x unified',
+            template='plotly_white'
         )
-    )
-    print(weather_forecast)
-    print(wf_df)
-   # forecast_graph = px.line(wf_df, x=wf_df.datetime, y=wf_df.temp)
+        
+        # Convert to HTML
+        forecast_graph = plot(fig, output_type='div', include_plotlyjs=True)
+    
+    print(f"DataFrame shape: {wf_df.shape}")
+    print(f"DataFrame columns: {wf_df.columns.tolist()}")
     
 
     return render(request, 'weatherapp/race.html', {
         'race': race,
         'weather_forecast': weather_forecast,
         'historic_weather': historic_weather,
-    #    'forecast_graph': forecast_graph
+        'forecast_graph': forecast_graph
 
     })

@@ -11,7 +11,11 @@
     <p>{{ race.date }}</p>
     <div>
       <h2>Weather Forecast</h2>
-      {{ forecast_graph }}
+      {% if forecast_graph %}
+    <div class="weather-graph">
+        {{ forecast_graph|safe }}
+    </div>
+      {% endif %}
       {% for weather in weather_forecast %}
           {{ weather.temp }}
           {{ weather.datetime }}
