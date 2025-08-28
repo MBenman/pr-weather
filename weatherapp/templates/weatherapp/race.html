@@ -1,12 +1,11 @@
-!doctype html>
+<!doctype html>
 <html lang="en-US">
   <head>
     <meta charset="utf-8" />
     <title>{{ race.name }}</title>
   </head>
   <body>
-    <p>{{ race.name }}</p>
-    <p>{{ race.length }}</p>
+    <h1>{{ race.name }}</h1>
     <p>{{ race.location }}</p>
     <p>{{ race.date }}</p>
     <div>
@@ -15,13 +14,20 @@
     <div class="weather-graph">
         {{ forecast_graph|safe }}
     </div>
+    <p>Weather Forecast:</p>
       {% endif %}
       {% for weather in weather_forecast %}
           {{ weather.temp }}
           {{ weather.datetime }}
       {% endfor %}
+      <p>Weather at Start:</p>
+      {% for w in start_weather %}
+          {{ w.temp }}
+          {{ w.datetime }}
+      {% endfor %}
     </div>
 
+    <p>Historic Weather:</p>
     {% for weather in historic_weather %}
     <p>Temps</p>
     <p>{{ weather.temp }}</p>

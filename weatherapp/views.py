@@ -21,12 +21,38 @@ def race_weather(request, slug):
     print(f"Race date: {race.date}")
     print(f"Race date (local): {timezone.localtime(race.date)}")
 
-    race_date = race.date.date()
+   # race_date = race.date.date()
+   # race_time = race.date.time()
+    race_local = timezone.localtime(race.date)
+    race_date = race_local.date()
+    race_time = race_local.time()
+
+    print(f"Looking for: date={race_date}, hour={race_local.hour}")
 
     weather_forecast = Weather.objects.filter(
         location=race.location,
         datetime__date=race_date
     ).order_by('datetime')
+
+    print(f"Weather forecast records found: {weather_forecast.count()}")
+
+    # Debug: Show what hours are actually available
+    if weather_forecast.exists():
+        print("Available hours in weather data:")
+        for w in weather_forecast:
+            local_w = timezone.localtime(w.datetime)
+            print(f"  {local_w} - Hour: {local_w.hour}")
+
+
+    start_weather = Weather.objects.filter(
+        location=race.location,
+        datetime__date=race_date,
+        datetime__hour=race_local.hour
+    ).order_by('datetime')
+
+    print(f"Start weather records found: {start_weather.count()}")
+
+
 
     historic_weather = Weather.objects.filter(
         location=race.location,
@@ -40,7 +66,7 @@ def race_weather(request, slug):
         location=race.location,
     ).order_by('datetime')
 
-    # If no forecast available, create from historic averages
+    # If no forecast available, create one from historic averages
     if not weather_forecast.exists():
         # Group historic weather by hour
         hourly_data = defaultdict(list)
@@ -167,13 +193,16 @@ def race_weather(request, slug):
         # Convert to HTML
         forecast_graph = plot(fig, output_type='div', include_plotlyjs=True)
     
-    print(f"DataFrame shape: {wf_df.shape}")
-    print(f"DataFrame columns: {wf_df.columns.tolist()}")
+    print(f'race time: {race_time}')
+    print(f'race local hour: {race_local.hour}')
+    print(f'race hour: {race_time.hour}')
+    
     
 
     return render(request, 'weatherapp/race.html', {
         'race': race,
         'weather_forecast': weather_forecast,
+        'start_weather': start_weather,
         'historic_weather': historic_weather,
         'forecast_graph': forecast_graph
 
