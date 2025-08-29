@@ -2,7 +2,8 @@ import openmeteo_requests
 import requests_cache
 import numpy as np
 from retry_requests import retry
-from datetime import datetime, timezone, date, timedelta
+from datetime import datetime, date, timedelta
+from django.utils import timezone
 from collections import defaultdict
 import os
 import sys

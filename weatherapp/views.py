@@ -66,61 +66,7 @@ def race_weather(request, slug):
         location=race.location,
     ).order_by('datetime')
 
-    # If no forecast available, create one from historic averages
-    if not weather_forecast.exists():
-        # Group historic weather by hour
-        hourly_data = defaultdict(list)
-        
-        for weather in historic_weather:
-            hour = weather.datetime.hour
-            hourly_data[hour].append(weather)
-        
-        # Create forecast objects from averages
-        forecast_objects = []
-        for hour in range(24):  # 0-23 hours
-            if hour in hourly_data:
-                historic_for_hour = hourly_data[hour]
-                
-                # Calculate averages for this hour
-                avg_temp = sum(w.temp for w in historic_for_hour if w.temp is not None) / len([w for w in historic_for_hour if w.temp is not None]) if any(w.temp is not None for w in historic_for_hour) else None
-                avg_humidity = sum(w.humidity for w in historic_for_hour if w.humidity is not None) / len([w for w in historic_for_hour if w.humidity is not None]) if any(w.humidity is not None for w in historic_for_hour) else None
-                avg_wind_speed = sum(w.wind_speed for w in historic_for_hour if w.wind_speed is not None) / len([w for w in historic_for_hour if w.wind_speed is not None]) if any(w.wind_speed is not None for w in historic_for_hour) else None
-                # Add more fields as needed...
-                
-                # Create forecast datetime for this hour
-                forecast_datetime = timezone.make_aware(
-                    datetime.combine(race_date, datetime.min.time().replace(hour=hour))
-                )
-                
-                # Create a Weather object (not saved to DB)
-                forecast_weather = Weather(
-                    location=race.location,
-                    datetime=forecast_datetime,
-                    temp=avg_temp,
-                    humidity=avg_humidity,
-                    wind_speed=avg_wind_speed,
-                    # Add other fields...
-                )
-                forecast_objects.append(forecast_weather)
-        
-        weather_forecast = forecast_objects
 
-
-#Can be removed
-    print(f"All location weather: {location_weather_all.count()}")
-    if location_weather_all:
-        first = timezone.localtime(location_weather_all.first().datetime)
-        last = timezone.localtime(location_weather_all.last().datetime)
-        print(f"First record: {first}")
-        print(f"Last record: {last}")
-    
-    print(f"Weather records found: {historic_weather.count()}")
-    if historic_weather:
-        first = timezone.localtime(historic_weather.first().datetime)
-        last = timezone.localtime(historic_weather.last().datetime)
-        print(f"First record: {first}")
-        print(f"Last record: {last}")
-#End can be removed
 
     # Convert to DataFrame
     if hasattr(weather_forecast, 'values'):

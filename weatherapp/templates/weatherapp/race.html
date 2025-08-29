@@ -10,6 +10,10 @@
     <p>{{ race.date }}</p>
     <div>
       <h2>Weather Forecast</h2>
+    <div class="forecast-card">
+      {{ start_weather.first.temp }} <span>&deg;F</span>
+      {{ start_weather.first.datetime }}
+    </div>
       {% if forecast_graph %}
     <div class="weather-graph">
         {{ forecast_graph|safe }}
@@ -21,10 +25,8 @@
           {{ weather.datetime }}
       {% endfor %}
       <p>Weather at Start:</p>
-      {% for w in start_weather %}
-          {{ w.temp }}
-          {{ w.datetime }}
-      {% endfor %}
+      {{ start_weather.first.temp }}
+      {{ start_weather.first.datetime }}
     </div>
 
     <p>Historic Weather:</p>
