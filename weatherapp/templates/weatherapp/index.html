@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>PR Weather</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a href="/admin/">Admin</a>
+    <h1>Races</h1>
+    <div class="race-index">
+        <ul>
+        {% for race in races %}
+            <li><a href="/weatherapp/race/{{ race.slug }}">{{ race.name }}</a></li>
+        {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

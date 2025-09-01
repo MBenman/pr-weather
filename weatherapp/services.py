@@ -2,7 +2,7 @@ import openmeteo_requests
 import requests_cache
 import numpy as np
 from retry_requests import retry
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone as dt_timezone
 from django.utils import timezone
 from collections import defaultdict
 import os
@@ -112,7 +112,7 @@ def get_save_forecast(race):
 
         # Generate list of timestamps
         times = [
-            datetime.fromtimestamp(start_time + i * interval_seconds, tz=timezone.utc)
+            datetime.fromtimestamp(start_time + i * interval_seconds, tz=dt_timezone.utc)
             for i in range(int((end_time - start_time) / interval_seconds))
         ]
 
@@ -158,6 +158,10 @@ def get_save_forecast(race):
         
         # Group historic weather by hour
         hourly_data = defaultdict(list)
+
+    #    for w in historic_weather:
+    #        print(f'Hour: {w.datetime.hour}')
+    #        print(f'Temp: {w.temp}')
         
         for weather in historic_weather:
             hour = weather.datetime.hour
@@ -220,6 +224,8 @@ def get_save_historic_weather(race):
     start_year = 2022 # API history goes back to 2022
     end_year = race.date.year
 
+    local_tz = timezone.get_current_timezone()
+
     # Setup the Open-Meteo API client with cache and retry on error
     cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
     retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
@@ -237,7 +243,7 @@ def get_save_historic_weather(race):
             "longitude": long,
             "start_date": current_date,
             "end_date": current_date,
-            "hourly": ["relative_humidity_2m", "temperature_2m", "rain", "precipitation_probability", "precipitation", "showers", "snowfall", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m"],
+            "hourly": ["temperature_2m", "relative_humidity_2m", "rain", "precipitation_probability", "precipitation", "showers", "snowfall", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m"],
             "wind_speed_unit": "mph",
             "temperature_unit": "fahrenheit"
             }
@@ -254,15 +260,15 @@ def get_save_historic_weather(race):
 
             # Generate list of timestamps
             times = [
-                datetime.fromtimestamp(start_time + i * interval_seconds, tz=timezone.utc)
+                datetime.fromtimestamp(start_time + i * interval_seconds, tz=dt_timezone.utc)
                 for i in range(int((end_time - start_time) / interval_seconds))
             ]
 
 
             # Get all variable values
             var_data = {
-                "temp": hourly.Variables(0).ValuesAsNumpy(),
                 "humidity": hourly.Variables(1).ValuesAsNumpy(),
+                "temp": hourly.Variables(0).ValuesAsNumpy(),
                 "rain": hourly.Variables(2).ValuesAsNumpy(),
                 "precip_prob": hourly.Variables(3).ValuesAsNumpy(),
                 "precip": hourly.Variables(4).ValuesAsNumpy(),
@@ -292,11 +298,14 @@ def get_save_historic_weather(race):
                     datetime=dt,
                     defaults=weather_data
                 )
+
         except Exception as e:
             print(f"Error fetching weather for {year}: {str(e)}")
             continue 
     print(f"Completed weather fetching from {start_year} to {end_year}")
+    
 
+    
 
 
     #return weather?

@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone 
 from django.db.models import Avg
 from collections import defaultdict
 from .models import *
@@ -12,7 +12,11 @@ from plotly.offline import plot
 import plotly
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the pr weather index.")
+    races = Race.objects.all()
+
+    return render(request, 'weatherapp/index.html', {
+        'races': races,
+    })
 
 
 def race_weather(request, slug):
@@ -23,43 +27,39 @@ def race_weather(request, slug):
 
    # race_date = race.date.date()
    # race_time = race.date.time()
-    race_local = timezone.localtime(race.date)
-    race_date = race_local.date()
-    race_time = race_local.time()
+   # race_local = timezone.localtime(race.date)
+   # race_date = race_local.date()
+   # race_time = race_local.time()
 
-    print(f"Looking for: date={race_date}, hour={race_local.hour}")
+    # Convert race time to UTC to match how Django stores datetime
+    race_utc = race.date.astimezone(dt_timezone.utc)
+    race_date_utc = race_utc.date()
+    race_hour_utc = race_utc.hour
+
+    print(f"Race local: {race.date}")
+    print(f"Race UTC: {race_utc} (date: {race_date_utc}, hour: {race_hour_utc})")   
 
     weather_forecast = Weather.objects.filter(
         location=race.location,
-        datetime__date=race_date
+        datetime__date=race_date_utc
     ).order_by('datetime')
 
     print(f"Weather forecast records found: {weather_forecast.count()}")
 
-    # Debug: Show what hours are actually available
-    if weather_forecast.exists():
-        print("Available hours in weather data:")
-        for w in weather_forecast:
-            local_w = timezone.localtime(w.datetime)
-            print(f"  {local_w} - Hour: {local_w.hour}")
-
 
     start_weather = Weather.objects.filter(
         location=race.location,
-        datetime__date=race_date,
-        datetime__hour=race_local.hour
+        datetime__date=race_date_utc,
+        datetime__hour=race_hour_utc
     ).order_by('datetime')
-
-    print(f"Start weather records found: {start_weather.count()}")
-
 
 
     historic_weather = Weather.objects.filter(
         location=race.location,
-        datetime__month=race_date.month,
-        datetime__day=race_date.day
+        datetime__month=race_date_utc.month,
+        datetime__day=race_date_utc.day
     ).exclude(
-        datetime__year=race_date.year
+        datetime__year=race_date_utc.year
     ).order_by('datetime')
 
     location_weather_all = Weather.objects.filter(
@@ -139,9 +139,6 @@ def race_weather(request, slug):
         # Convert to HTML
         forecast_graph = plot(fig, output_type='div', include_plotlyjs=True)
     
-    print(f'race time: {race_time}')
-    print(f'race local hour: {race_local.hour}')
-    print(f'race hour: {race_time.hour}')
     
     
 
