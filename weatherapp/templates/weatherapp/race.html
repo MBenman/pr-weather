@@ -14,15 +14,18 @@
     <h1>{{ race.name }}</h1>
     <p>{{ race.location }}</p>
     <p>{{ race.date }}</p>
-    <div>
-      <h2>Weather Forecast</h2>
-    <div class="forecast-card">
-      {{ start_weather.first.temp }} <span>&deg;F</span>
-      {{ start_weather.first.datetime }}
-    </div>
-      {% if forecast_graph %}
-    <div class="weather-graph">
-        {{ forecast_graph|safe }}
+    <div class="forecast">
+      <div class="forecast-card">
+        <h4>Weather Forecast</h4>
+        <h1>{{ start_weather.first.temp }}&deg;F</h1>
+        <h2>{{ start_weather.first.humidity }}&percnt; Humidity</h2>
+        <h2>{{ start_weather.first.precip_prob }}&percnt; Chance of Rain</h2>
+        {{ start_weather.first.datetime }}
+      </div>
+        {% if forecast_graph %}
+      <div class="weather-graph">
+          {{ forecast_graph|safe }}
+      </div>
     </div>
     <p>Weather Forecast:</p>
       {% endif %}
@@ -33,7 +36,7 @@
       <p>Weather at Start:</p>
       {{ start_weather.first.temp }}
       {{ start_weather.first.datetime }}
-    </div>
+    
 
     <p>Historic Weather:</p>
     {% for weather in historic_weather %}

@@ -133,7 +133,8 @@ def race_weather(request, slug):
                 side='right'
             ),
             hovermode='x unified',
-            template='plotly_white'
+            template='ggplot2',
+            paper_bgcolor='#f0f0f0'
         )
         
         # Convert to HTML
